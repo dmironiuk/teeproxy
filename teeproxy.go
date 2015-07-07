@@ -25,6 +25,7 @@ type handler struct {
 }
 
 func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("Request: ", req)
 	req1, req2 := DuplicateRequest(req)
 	go func() {
 		defer func() {
@@ -35,7 +36,8 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		client_tcp_conn, _ := net.DialTimeout("tcp", h.Alternative, time.Duration(1*time.Second)) // Open new TCP connection to the server
 		client_http_conn := httputil.NewClientConn(client_tcp_conn, nil)                          // Start a new HTTP connection on it
 		client_http_conn.Write(req1)                                                              // Pass on the request
-		client_http_conn.Read(req1)                                                               // Read back the reply
+		resp, _ := client_http_conn.Read(req1)                                                    // Read back the reply
+		fmt.Println("Rsponse1: ", resp)
 		client_http_conn.Close()                                                                  // Close the connection to the server
 	}()
 	defer func() {
@@ -48,6 +50,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	client_http_conn := httputil.NewClientConn(client_tcp_conn, nil)                     // Start a new HTTP connection on it
 	client_http_conn.Write(req2)                                                         // Pass on the request
 	resp, _ := client_http_conn.Read(req2)                                               // Read back the reply
+	fmt.Println("Rsponse2: ", resp)
 	resp.Write(w)                                                                        // Write the reply to the original connection
 	client_http_conn.Close()                                                             // Close the connection to the server
 }
